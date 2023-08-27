@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webmap with Dynamic Size and Labels</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([51.495, 0], 5);
+
+        // OpenStreetMap layer
+        const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+        });
+
+        // Esri World Imagery layer
+        const esriLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        });
+
+        osmLayer.addTo(map);  // Default to OSM layer
+
+        let marker, buffer, label;
+
+        map.on('click', function(e) {
+            if (marker) {
+                map.removeLayer(marker);
+                if (buffer) {
+                    map.removeLayer(buffer);
+                }
+                if (label) {
+                    map.removeLayer(label);
+                }
+            }
+
+            marker = new L.marker(e.latlng).addTo(map);
+            
+            // Display lat/long label
+            const labelText = e.latlng.lat.toFixed(5) + ", " + e.latlng.lng.toFixed(5);
+            label = L.tooltip({
+                permanent: true,
+                direction: 'right'
+            })
+            .setContent(labelText)
+            .setLatLng(e.latlng)
+            .addTo(map);
+
+            // Create a buffer using Leaflet's circle functionality
+            // 100 miles in meters = 160934.4 meters
+            buffer = L.circle(e.latlng, { radius: 160934.4 }).addTo(map);
+        });
+
+        // Add layer control to switch between OSM and Esri layers
+        L.control.layers({
+            "OpenStreetMap": osmLayer,
+            "Esri World Imagery": esriLayer
+        }).addTo(map);
+
+    </script>
+</body>
+</html>
